@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import {
+  DeleteGoalButton,
+  DeleteSavingsMovementButton,
+} from "@/app/dashboard/ahorros/[id]/management-buttons";
 import { SavingsMovementForm } from "@/app/dashboard/ahorros/[id]/savings-movement-form";
 import {
   estimatedSavingsDate,
@@ -28,10 +32,13 @@ function todayInCostaRica() {
 
 export default async function SavingsGoalPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const { error: actionError } = await searchParams;
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
@@ -96,7 +103,7 @@ export default async function SavingsGoalPage({
 
       <section className="goal-detail-page">
         <header className="goal-detail-heading">
-          <div>
+          <div className="goal-heading-main">
             <span className="eyebrow">Meta de ahorro</span>
             <h1>{goal.name}</h1>
             <p>
@@ -109,6 +116,15 @@ export default async function SavingsGoalPage({
                   }).format(new Date(`${goal.target_date}T00:00:00Z`))}`
                 : "Sin fecha límite"}
             </p>
+            <div className="goal-heading-actions">
+              <Link
+                className="button button-secondary button-small"
+                href={`/dashboard/ahorros/${goal.id}/editar`}
+              >
+                Editar meta
+              </Link>
+              <DeleteGoalButton goalId={goal.id} />
+            </div>
           </div>
           <div className="goal-balance-card">
             <span>Ahorrado hasta hoy</span>
@@ -121,6 +137,14 @@ export default async function SavingsGoalPage({
             </small>
           </div>
         </header>
+
+        {actionError ? (
+          <p className="form-message form-message-error goal-action-error">
+            {actionError === "movement-delete-balance"
+              ? "No se puede borrar ese aporte porque dejaría el ahorro en negativo. Corregí primero los retiros relacionados."
+              : "No pudimos eliminar el registro. Intentá nuevamente."}
+          </p>
+        ) : null}
 
         <div className="goal-progress-card">
           <div>
@@ -212,6 +236,18 @@ export default async function SavingsGoalPage({
                         {isDeposit ? "+" : "−"}
                         {money.format(Number(movement.amount))}
                       </strong>
+                      <div className="movement-row-actions">
+                        <Link
+                          className="edit-button"
+                          href={`/dashboard/ahorros/${goal.id}/movimientos/${movement.id}/editar`}
+                        >
+                          Editar
+                        </Link>
+                        <DeleteSavingsMovementButton
+                          goalId={goal.id}
+                          movementId={movement.id}
+                        />
+                      </div>
                     </div>
                   );
                 })}

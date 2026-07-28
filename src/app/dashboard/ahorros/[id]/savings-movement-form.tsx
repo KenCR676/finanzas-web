@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import {
   createSavingsMovementAction,
   type SavingsState,
+  updateSavingsMovementAction,
 } from "@/app/dashboard/ahorros/actions";
 
 const initialState: SavingsState = {};
@@ -11,19 +12,32 @@ const initialState: SavingsState = {};
 export function SavingsMovementForm({
   goalId,
   today,
+  movement,
 }: {
   goalId: string;
   today: string;
+  movement?: {
+    id: string;
+    type: "deposit" | "withdrawal";
+    amount: number;
+    movementDate: string;
+    description: string;
+  };
 }) {
-  const [type, setType] = useState<"deposit" | "withdrawal">("deposit");
+  const [type, setType] = useState<"deposit" | "withdrawal">(
+    movement?.type ?? "deposit",
+  );
   const [state, action, pending] = useActionState(
-    createSavingsMovementAction,
+    movement ? updateSavingsMovementAction : createSavingsMovementAction,
     initialState,
   );
 
   return (
     <form className="movement-form" action={action}>
       <input name="goalId" type="hidden" value={goalId} />
+      {movement ? (
+        <input name="movementId" type="hidden" value={movement.id} />
+      ) : null}
 
       <fieldset className="movement-kind">
         <legend>Movimiento</legend>
@@ -63,6 +77,7 @@ export function SavingsMovementForm({
           <span>₡</span>
           <input
             id="amount"
+            defaultValue={movement?.amount}
             min="0.01"
             name="amount"
             placeholder="0"
@@ -77,7 +92,7 @@ export function SavingsMovementForm({
         <label htmlFor="movementDate">Fecha</label>
         <input
           className="auth-input"
-          defaultValue={today}
+          defaultValue={movement?.movementDate ?? today}
           id="movementDate"
           name="movementDate"
           required
@@ -90,6 +105,7 @@ export function SavingsMovementForm({
         <input
           className="auth-input"
           id="description"
+          defaultValue={movement?.description}
           maxLength={240}
           name="description"
           placeholder="Opcional"
@@ -103,17 +119,35 @@ export function SavingsMovementForm({
         </p>
       ) : null}
 
-      <button
-        className="button button-primary button-full"
-        disabled={pending}
-        type="submit"
-      >
-        {pending
-          ? "Guardando..."
-          : type === "deposit"
-            ? "Guardar aporte"
-            : "Guardar retiro"}
-      </button>
+      {movement ? (
+        <div className="movement-actions">
+          <a
+            className="button button-secondary"
+            href={`/dashboard/ahorros/${goalId}`}
+          >
+            Cancelar
+          </a>
+          <button
+            className="button button-primary"
+            disabled={pending}
+            type="submit"
+          >
+            {pending ? "Guardando..." : "Guardar cambios"}
+          </button>
+        </div>
+      ) : (
+        <button
+          className="button button-primary button-full"
+          disabled={pending}
+          type="submit"
+        >
+          {pending
+            ? "Guardando..."
+            : type === "deposit"
+              ? "Guardar aporte"
+              : "Guardar retiro"}
+        </button>
+      )}
     </form>
   );
 }

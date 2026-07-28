@@ -121,6 +121,17 @@ select {
   background: var(--green-dark);
 }
 
+.button-danger {
+  border-color: #d7a38e;
+  background: #fff0e9;
+  color: #873a1b;
+}
+
+.button-danger:hover {
+  border-color: #b76848;
+  background: #fce3d7;
+}
+
 .button-secondary {
   border-color: var(--line);
   background: rgba(255, 255, 255, 0.7);
@@ -819,6 +830,32 @@ select {
   font-weight: 750;
 }
 
+.movement-row-actions,
+.goal-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.inline-delete-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.delete-text-button {
+  border: 0;
+  padding: 0.35rem 0.15rem;
+  background: transparent;
+  color: #a34725;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.delete-text-button:hover {
+  text-decoration: underline;
+}
+
 .movement-shell {
   min-height: 100vh;
   background: #f5f3ed;
@@ -1236,6 +1273,18 @@ select {
 
 .goal-detail-heading {
   align-items: center;
+}
+
+.goal-heading-main {
+  min-width: 0;
+}
+
+.goal-heading-actions {
+  margin-top: 1.1rem;
+}
+
+.goal-action-error {
+  margin: 0 0 1rem;
 }
 
 .goal-progress-card {
@@ -2093,6 +2142,18 @@ select {
   .transaction-row .edit-button {
     grid-column: 3;
     grid-row: 1 / span 2;
+  }
+
+  .transaction-row .movement-row-actions {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .goal-heading-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .movement-kind,
