@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
 import { createClient } from "@/lib/supabase/server";
@@ -43,7 +44,9 @@ export default async function DashboardPage() {
         .maybeSingle(),
       supabase
         .from("transactions")
-        .select("type, amount, description, transaction_date")
+        .select(
+          "id, type, amount, description, transaction_date, expense_kind, categories(name, color)",
+        )
         .gte("transaction_date", start)
         .lte("transaction_date", end)
         .order("transaction_date", { ascending: false }),
@@ -91,9 +94,9 @@ export default async function DashboardPage() {
             <span className="eyebrow">Resumen mensual</span>
             <h1>Hola, {displayName}.</h1>
           </div>
-          <button className="button button-primary" type="button">
+          <Link className="button button-primary" href="/dashboard/nuevo">
             + Nuevo movimiento
-          </button>
+          </Link>
         </header>
 
         <div className="dashboard-grid">
@@ -120,33 +123,81 @@ export default async function DashboardPage() {
         </div>
 
         <div className="dashboard-content">
-          <article className="empty-card">
-            <h2>Movimientos recientes</h2>
+          <article className="empty-card movements-card">
+            <div className="card-heading">
+              <div>
+                <h2>Movimientos recientes</h2>
+                <span>{transactions?.length ?? 0} este mes</span>
+              </div>
+              <Link href="/dashboard/nuevo">Agregar</Link>
+            </div>
             {transactions?.length ? (
-              <div className="category-list">
-                {transactions.slice(0, 5).map((transaction, index) => (
-                  <div className="category-row" key={`${transaction.transaction_date}-${index}`}>
-                    <span>
+              <div className="transaction-list">
+                {transactions.slice(0, 8).map((transaction) => {
+                  const category = Array.isArray(transaction.categories)
+                    ? transaction.categories[0]
+                    : transaction.categories;
+                  const isIncome = transaction.type === "income";
+
+                  return (
+                    <div className="transaction-row" key={transaction.id}>
                       <i
-                        className={`category-swatch ${
-                          transaction.type === "income"
-                            ? "income-dot"
-                            : "expense-dot"
-                        }`}
-                      />
-                      {transaction.description || "Sin descripción"}
-                    </span>
-                    <strong>{money.format(Number(transaction.amount))}</strong>
-                  </div>
-                ))}
+                        className="transaction-icon"
+                        style={{
+                          backgroundColor:
+                            category?.color ||
+                            (isIncome ? "var(--green)" : "var(--orange)"),
+                        }}
+                      >
+                        {isIncome ? "+" : "−"}
+                      </i>
+                      <span className="transaction-copy">
+                        <strong>
+                          {transaction.description ||
+                            category?.name ||
+                            "Sin descripción"}
+                        </strong>
+                        <small>
+                          {category?.name || "Sin categoría"} ·{" "}
+                          {new Intl.DateTimeFormat("es-CR", {
+                            day: "numeric",
+                            month: "short",
+                            timeZone: "UTC",
+                          }).format(
+                            new Date(`${transaction.transaction_date}T00:00:00Z`),
+                          )}
+                          {transaction.expense_kind
+                            ? ` · ${
+                                transaction.expense_kind === "fixed"
+                                  ? "Fijo"
+                                  : "Variable"
+                              }`
+                            : ""}
+                        </small>
+                      </span>
+                      <strong
+                        className={
+                          isIncome
+                            ? "transaction-amount income-amount"
+                            : "transaction-amount expense-amount"
+                        }
+                      >
+                        {isIncome ? "+" : "−"}
+                        {money.format(Number(transaction.amount))}
+                      </strong>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <>
                 <p>
-                  Todavía no hay movimientos este mes. El próximo paso será
-                  agregar el formulario para registrar el primero.
+                  Todavía no hay movimientos este mes. Registrá tu primer
+                  ingreso o gasto para comenzar.
                 </p>
-                <span className="empty-action">Tu historial aparecerá aquí →</span>
+                <Link className="empty-action" href="/dashboard/nuevo">
+                  Registrar mi primer movimiento →
+                </Link>
               </>
             )}
           </article>
@@ -168,7 +219,7 @@ export default async function DashboardPage() {
                   Creá una meta para tu fondo de emergencia, un viaje o
                   cualquier objetivo importante.
                 </p>
-                <span className="empty-action">Prepará tu primera meta →</span>
+                <span className="empty-action">Próximamente: primera meta →</span>
               </>
             )}
           </article>

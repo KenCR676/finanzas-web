@@ -36,7 +36,8 @@ a {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -78,7 +79,8 @@ input {
 }
 
 .button:focus-visible,
-.auth-input:focus-visible {
+.auth-input:focus-visible,
+.amount-input:focus-within {
   outline: 3px solid rgba(23, 107, 77, 0.22);
   outline-offset: 2px;
 }
@@ -621,6 +623,28 @@ input {
   margin: 0 0 0.5rem;
 }
 
+.card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-heading h2 {
+  margin-bottom: 0.18rem;
+}
+
+.card-heading span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.card-heading > a {
+  color: var(--green);
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
 .empty-card p {
   max-width: 520px;
   margin: 0;
@@ -663,6 +687,229 @@ input {
 
 .category-row strong {
   font-size: 0.9rem;
+}
+
+.transaction-list {
+  display: grid;
+  margin-top: 1.1rem;
+}
+
+.transaction-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  border-top: 1px solid var(--line);
+  padding: 0.9rem 0;
+}
+
+.transaction-icon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  color: white;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.transaction-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.transaction-copy strong,
+.transaction-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transaction-copy small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.transaction-amount {
+  font-size: 0.9rem;
+}
+
+.income-amount {
+  color: var(--green);
+}
+
+.expense-amount {
+  color: #a34725;
+}
+
+.movement-shell {
+  min-height: 100vh;
+  background: #f5f3ed;
+}
+
+.back-link {
+  color: var(--green);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.movement-page {
+  width: min(760px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(2.5rem, 7vw, 5rem) 0;
+}
+
+.movement-heading {
+  max-width: 620px;
+  margin-bottom: 1.8rem;
+}
+
+.movement-heading h1 {
+  margin: 0.8rem 0 0.65rem;
+  font-size: clamp(2.5rem, 7vw, 4.6rem);
+  letter-spacing: -0.065em;
+  line-height: 0.98;
+}
+
+.movement-heading p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.movement-card {
+  border: 1px solid var(--line);
+  border-radius: 1.35rem;
+  padding: clamp(1.2rem, 4vw, 2rem);
+  background: var(--paper);
+  box-shadow: 0 18px 50px rgba(25, 55, 43, 0.08);
+}
+
+.movement-form {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.movement-kind {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+
+.movement-kind legend {
+  margin-bottom: 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+
+.movement-kind label {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 0.9rem;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.movement-kind label.selected {
+  border-color: var(--green);
+  background: #eff7f2;
+}
+
+.movement-kind input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.movement-kind-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 850;
+}
+
+.expense-kind-icon {
+  background: var(--orange);
+}
+
+.income-kind-icon {
+  background: var(--green);
+}
+
+.movement-kind label > span:last-child {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.movement-kind small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.movement-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.amount-field {
+  grid-column: 1 / -1;
+}
+
+.amount-input {
+  display: flex;
+  min-height: 4.4rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 0 1rem;
+  background: white;
+}
+
+.amount-input span {
+  color: var(--muted);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.amount-input input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 2rem;
+  font-weight: 780;
+  letter-spacing: -0.04em;
+}
+
+.movement-description {
+  grid-column: 1 / -1;
+}
+
+.movement-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1.2rem;
 }
 
 @media (max-width: 850px) {
@@ -733,5 +980,28 @@ input {
   .dashboard-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .transaction-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .transaction-amount {
+    grid-column: 2;
+  }
+
+  .movement-kind,
+  .movement-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .amount-field,
+  .movement-description {
+    grid-column: auto;
+  }
+
+  .movement-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
   }
 }
