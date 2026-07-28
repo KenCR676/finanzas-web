@@ -6,7 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Ingresar" };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ password?: string }>;
+}) {
+  const { password } = await searchParams;
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
 
@@ -24,6 +29,11 @@ export default async function LoginPage() {
         <div className="auth-card">
           <h1>Bienvenido de vuelta.</h1>
           <p>Ingresá para continuar con tu resumen financiero.</p>
+          {password === "updated" ? (
+            <p className="form-message form-message-success" aria-live="polite">
+              Tu contraseña fue actualizada. Ya podés iniciar sesión.
+            </p>
+          ) : null}
           <LoginForm />
         </div>
       </section>

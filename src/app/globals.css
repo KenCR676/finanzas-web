@@ -466,9 +466,16 @@ select {
   text-align: center;
 }
 
-.auth-switch a {
+.auth-switch a,
+.auth-forgot a {
   color: var(--green);
   font-weight: 750;
+}
+
+.auth-forgot {
+  margin: -0.35rem 0 0;
+  font-size: 0.82rem;
+  text-align: right;
 }
 
 .auth-art {

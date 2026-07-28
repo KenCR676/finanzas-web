@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useActionState } from "react";
 import {
   loginAction,
+  requestPasswordResetAction,
   registerAction,
+  updatePasswordAction,
   type AuthState,
 } from "@/app/auth/actions";
 
@@ -39,6 +41,9 @@ export function LoginForm() {
           required
         />
       </div>
+      <p className="auth-forgot">
+        <Link href="/olvide-contrasena">¿Olvidaste tu contraseña?</Link>
+      </p>
       {state.error ? (
         <p className="form-message form-message-error" aria-live="polite">
           {state.error}
@@ -54,6 +59,103 @@ export function LoginForm() {
       <p className="auth-switch">
         ¿Todavía no tenés cuenta? <Link href="/registro">Crear una</Link>
       </p>
+    </form>
+  );
+}
+
+export function ForgotPasswordForm() {
+  const [state, action, pending] = useActionState(
+    requestPasswordResetAction,
+    initialState,
+  );
+
+  return (
+    <form className="auth-form" action={action}>
+      <div className="field">
+        <label htmlFor="email">Correo electrónico</label>
+        <input
+          className="auth-input"
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="nombre@correo.com"
+          required
+        />
+      </div>
+      {state.error ? (
+        <p className="form-message form-message-error" aria-live="polite">
+          {state.error}
+        </p>
+      ) : null}
+      {state.success ? (
+        <p className="form-message form-message-success" aria-live="polite">
+          {state.success}
+        </p>
+      ) : null}
+      <button
+        className="button button-primary button-full"
+        disabled={pending || Boolean(state.success)}
+        type="submit"
+      >
+        {pending ? "Enviando..." : "Enviar enlace"}
+      </button>
+      <p className="auth-switch">
+        <Link href="/login">Volver a iniciar sesión</Link>
+      </p>
+    </form>
+  );
+}
+
+export function UpdatePasswordForm() {
+  const [state, action, pending] = useActionState(
+    updatePasswordAction,
+    initialState,
+  );
+
+  return (
+    <form className="auth-form" action={action}>
+      <div className="field">
+        <label htmlFor="password">Nueva contraseña</label>
+        <input
+          className="auth-input"
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Mínimo 8 caracteres"
+          minLength={8}
+          required
+        />
+        <span className="field-hint">
+          Usá al menos 8 caracteres, una letra y un número.
+        </span>
+      </div>
+      <div className="field">
+        <label htmlFor="passwordConfirmation">Confirmar contraseña</label>
+        <input
+          className="auth-input"
+          id="passwordConfirmation"
+          name="passwordConfirmation"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Repetí la nueva contraseña"
+          minLength={8}
+          required
+        />
+      </div>
+      {state.error ? (
+        <p className="form-message form-message-error" aria-live="polite">
+          {state.error}
+        </p>
+      ) : null}
+      <button
+        className="button button-primary button-full"
+        disabled={pending}
+        type="submit"
+      >
+        {pending ? "Guardando..." : "Cambiar contraseña"}
+      </button>
     </form>
   );
 }
