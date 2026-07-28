@@ -1,65 +1,109 @@
-import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+
+  if (data?.claims?.sub) {
+    redirect("/dashboard");
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="landing">
+      <nav className="landing-nav">
+        <Link className="brand" href="/">
+          <span className="brand-mark">₡</span>
+          <span>Finanzas claras</span>
+        </Link>
+        <div className="nav-actions">
+          <Link className="button button-ghost" href="/login">
+            Ingresar
+          </Link>
+          <Link className="button button-primary button-small" href="/registro">
+            Crear cuenta
+          </Link>
+        </div>
+      </nav>
+
+      <section className="hero">
+        <div className="hero-copy">
+          <span className="eyebrow">Tu dinero, sin complicaciones</span>
+          <h1>Entendé hoy lo que pasa con tu dinero.</h1>
+          <p>
+            Registrá ingresos, gastos y metas de ahorro. Obtené un resumen
+            mensual sencillo para tomar mejores decisiones.
           </p>
+          <div className="hero-actions">
+            <Link className="button button-primary" href="/registro">
+              Empezar gratis
+            </Link>
+            <Link className="button button-secondary" href="/login">
+              Ya tengo una cuenta
+            </Link>
+          </div>
+          <div className="trust-row">
+            <span>✓ Datos privados por usuario</span>
+            <span>✓ Sin tarjeta</span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="preview-card" aria-label="Vista previa del resumen mensual">
+          <div className="preview-header">
+            <div>
+              <span className="preview-label">Resumen mensual</span>
+              <strong>Julio 2026</strong>
+            </div>
+            <span className="status-pill">Al día</span>
+          </div>
+          <div className="preview-balance">
+            <span>Balance disponible</span>
+            <strong>₡375.000</strong>
+            <small>+12% frente al mes anterior</small>
+          </div>
+          <div className="preview-stats">
+            <div>
+              <span className="stat-dot income-dot" />
+              <span>Ingresos</span>
+              <strong>₡850.000</strong>
+            </div>
+            <div>
+              <span className="stat-dot expense-dot" />
+              <span>Gastos</span>
+              <strong>₡475.000</strong>
+            </div>
+          </div>
+          <div className="savings-preview">
+            <div>
+              <span>Fondo de emergencia</span>
+              <strong>42%</strong>
+            </div>
+            <div className="progress-track">
+              <span style={{ width: "42%" }} />
+            </div>
+            <small>₡425.000 de ₡1.000.000</small>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="feature-strip">
+        <article>
+          <span className="feature-number">01</span>
+          <h2>Registrá</h2>
+          <p>Ingresos y gastos fijos o variables en pocos segundos.</p>
+        </article>
+        <article>
+          <span className="feature-number">02</span>
+          <h2>Entendé</h2>
+          <p>Un resumen mensual claro, sin hojas de cálculo complicadas.</p>
+        </article>
+        <article>
+          <span className="feature-number">03</span>
+          <h2>Ahorrá</h2>
+          <p>Creá metas y seguí cada aporte hasta alcanzar tu objetivo.</p>
+        </article>
+      </section>
+    </main>
   );
 }
