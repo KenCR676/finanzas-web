@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,15 +11,6 @@ export type AuthState = {
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
-}
-
-async function getOrigin() {
-  const requestHeaders = await headers();
-  const host =
-    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http";
-
-  return `${protocol}://${host}`;
 }
 
 export async function loginAction(
@@ -72,13 +62,11 @@ export async function registerAction(
   }
 
   const supabase = await createClient();
-  const origin = await getOrigin();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { display_name: displayName },
-      emailRedirectTo: `${origin}/auth/callback`,
     },
   });
 
@@ -93,8 +81,8 @@ export async function registerAction(
   }
 
   return {
-    success:
-      "Cuenta creada. Revisá tu correo y confirmá el enlace para ingresar.",
+    error:
+      "Ese correo ya podría estar registrado. Probá iniciar sesión con tus datos.",
   };
 }
 
