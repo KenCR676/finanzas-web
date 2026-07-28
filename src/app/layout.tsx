@@ -31,7 +31,13 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <footer className="creator-footer">
+          <strong>Creado por Kendall Muñoz</strong>
+          <span>Ingeniero Informático</span>
+        </footer>
+      </body>
     </html>
   );
 }

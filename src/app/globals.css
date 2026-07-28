@@ -30,6 +30,27 @@ body {
   font-family: var(--font-geist-sans), Arial, sans-serif;
 }
 
+.creator-footer {
+  display: grid;
+  place-items: center;
+  gap: 0.2rem;
+  border-top: 1px solid var(--line);
+  padding: 1.4rem 1rem;
+  background: var(--green-dark);
+  color: white;
+  text-align: center;
+}
+
+.creator-footer strong {
+  font-size: 0.85rem;
+  letter-spacing: -0.01em;
+}
+
+.creator-footer span {
+  color: #bad4c7;
+  font-size: 0.72rem;
+}
+
 a {
   color: inherit;
   text-decoration: none;
