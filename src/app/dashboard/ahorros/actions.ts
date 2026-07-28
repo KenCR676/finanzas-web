@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizePeriodMode } from "@/lib/periods";
 
 export type SavingsState = {
   error?: string;
@@ -42,6 +43,9 @@ export async function createSavingsGoalAction(
     : null;
   const targetDate = readString(formData, "targetDate");
   const color = readString(formData, "color");
+  const contributionFrequency = normalizePeriodMode(
+    readString(formData, "contributionFrequency"),
+  );
 
   if (name.length < 2 || name.length > 100) {
     return { error: "Ingresá un nombre de entre 2 y 100 caracteres." };
@@ -71,6 +75,7 @@ export async function createSavingsGoalAction(
     target_amount: targetAmount,
     target_date: targetDate || null,
     monthly_target: monthlyTarget,
+    contribution_frequency: contributionFrequency,
     color: selectedColor,
   });
 

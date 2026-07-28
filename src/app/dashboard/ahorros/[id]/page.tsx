@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SavingsMovementForm } from "@/app/dashboard/ahorros/[id]/savings-movement-form";
+import {
+  estimatedSavingsDate,
+  normalizePeriodMode,
+} from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Detalle de ahorro" };
@@ -39,7 +43,9 @@ export default async function SavingsGoalPage({
   const [{ data: goal }, { data: movements }] = await Promise.all([
     supabase
       .from("savings_goals")
-      .select("id, name, target_amount, target_date, monthly_target, color")
+      .select(
+        "id, name, target_amount, target_date, monthly_target, contribution_frequency, color",
+      )
       .eq("id", id)
       .eq("user_id", userId)
       .maybeSingle(),
@@ -68,6 +74,13 @@ export default async function SavingsGoalPage({
     100,
     Math.max(0, (balance / Number(goal.target_amount)) * 100),
   );
+  const frequency = normalizePeriodMode(goal.contribution_frequency);
+  const projection = estimatedSavingsDate({
+    balance,
+    target: Number(goal.target_amount),
+    contribution: goal.monthly_target ? Number(goal.monthly_target) : null,
+    frequency,
+  });
 
   return (
     <main className="movement-shell">
@@ -122,12 +135,31 @@ export default async function SavingsGoalPage({
           <small>
             Objetivo: {money.format(Number(goal.target_amount))}
             {goal.monthly_target
-              ? ` · Aporte mensual sugerido: ${money.format(
-                  Number(goal.monthly_target),
-                )}`
+              ? ` · Aporte ${frequency === "monthly" ? "mensual" : "quincenal"}: ${money.format(Number(goal.monthly_target))}`
               : ""}
           </small>
         </div>
+
+        <article className="projection-card">
+          <span>Finalización estimada</span>
+          <strong>
+            {projection
+              ? projection.completed
+                ? "Meta completada"
+                : new Intl.DateTimeFormat("es-CR", {
+                    month: "long",
+                    year: "numeric",
+                  }).format(projection.date)
+              : "Sin cálculo todavía"}
+          </strong>
+          <small>
+            {projection
+              ? projection.completed
+                ? "Ya alcanzaste el monto objetivo."
+                : `${projection.periods} aportes ${frequency === "monthly" ? "mensuales" : "quincenales"} pendientes según el plan actual.`
+              : "Definí un aporte periódico para calcular la fecha."}
+          </small>
+        </article>
 
         <div className="goal-detail-layout">
           <article className="movement-card">

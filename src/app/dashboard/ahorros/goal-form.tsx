@@ -8,7 +8,11 @@ import {
 
 const initialState: SavingsState = {};
 
-export function GoalForm() {
+export function GoalForm({
+  defaultFrequency,
+}: {
+  defaultFrequency: "monthly" | "fortnightly";
+}) {
   const [state, action, pending] = useActionState(
     createSavingsGoalAction,
     initialState,
@@ -44,7 +48,7 @@ export function GoalForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="monthlyTarget">Aporte mensual</label>
+        <label htmlFor="monthlyTarget">Aporte periódico</label>
         <input
           className="auth-input"
           id="monthlyTarget"
@@ -54,6 +58,19 @@ export function GoalForm() {
           step="0.01"
           type="number"
         />
+      </div>
+
+      <div className="field">
+        <label htmlFor="contributionFrequency">Frecuencia del aporte</label>
+        <select
+          className="auth-input"
+          defaultValue={defaultFrequency}
+          id="contributionFrequency"
+          name="contributionFrequency"
+        >
+          <option value="monthly">Mensual</option>
+          <option value="fortnightly">Quincenal</option>
+        </select>
       </div>
 
       <div className="field">

@@ -8,6 +8,8 @@ create table public.profiles (
   display_name text,
   currency_code text not null default 'CRC'
     check (char_length(currency_code) = 3),
+  period_mode text not null default 'monthly'
+    check (period_mode in ('monthly', 'fortnightly')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -67,6 +69,8 @@ create table public.savings_goals (
   target_amount numeric(14, 2) not null check (target_amount > 0),
   target_date date,
   monthly_target numeric(14, 2) check (monthly_target > 0),
+  contribution_frequency text not null default 'monthly'
+    check (contribution_frequency in ('monthly', 'fortnightly')),
   color text not null default '#0f766e',
   icon text,
   status text not null default 'active'

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { currentPeriod, normalizePeriodMode } from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Mis movimientos" };
@@ -21,12 +22,22 @@ export default async function MovementsPage() {
     redirect("/login");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("period_mode")
+    .eq("id", userId)
+    .maybeSingle();
+  const periodMode = normalizePeriodMode(profile?.period_mode);
+  const period = currentPeriod(periodMode);
+
   const { data: transactions } = await supabase
     .from("transactions")
     .select(
       "id, type, amount, description, transaction_date, expense_kind, categories(name, color)",
     )
     .eq("user_id", userId)
+    .gte("transaction_date", period.start)
+    .lte("transaction_date", period.end)
     .order("transaction_date", { ascending: false })
     .limit(100);
 
@@ -48,7 +59,8 @@ export default async function MovementsPage() {
             <span className="eyebrow">Historial</span>
             <h1>Ingresos y gastos</h1>
             <p>
-              Revisá tus últimos registros y corregí cualquier dato cuando lo
+              Periodo {periodMode === "monthly" ? "mensual" : "quincenal"}:{" "}
+              {period.label}. Revisá y corregí cualquier dato cuando lo
               necesités.
             </p>
           </div>

@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GoalForm } from "@/app/dashboard/ahorros/goal-form";
+import {
+  estimatedSavingsDate,
+  normalizePeriodMode,
+} from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Ahorros" };
@@ -22,13 +26,21 @@ export default async function SavingsPage() {
     redirect("/login");
   }
 
-  const { data: goals } = await supabase
-    .from("savings_goals")
-    .select(
-      "id, name, target_amount, target_date, monthly_target, color, status, savings_movements(type, amount)",
-    )
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  const [{ data: profile }, { data: goals }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("period_mode")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("savings_goals")
+      .select(
+        "id, name, target_amount, target_date, monthly_target, contribution_frequency, color, status, savings_movements(type, amount)",
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false }),
+  ]);
+  const periodMode = normalizePeriodMode(profile?.period_mode);
 
   const goalsWithBalance =
     goals?.map((goal) => {
@@ -44,7 +56,21 @@ export default async function SavingsPage() {
         100,
         Math.max(0, (balance / Number(goal.target_amount)) * 100),
       );
-      return { ...goal, balance, percentage };
+      const frequency = normalizePeriodMode(goal.contribution_frequency);
+      return {
+        ...goal,
+        balance,
+        percentage,
+        frequency,
+        projection: estimatedSavingsDate({
+          balance,
+          target: Number(goal.target_amount),
+          contribution: goal.monthly_target
+            ? Number(goal.monthly_target)
+            : null,
+          frequency,
+        }),
+      };
     }) ?? [];
   const totalSaved = goalsWithBalance.reduce(
     (sum, goal) => sum + goal.balance,
@@ -111,6 +137,16 @@ export default async function SavingsPage() {
                       <span>{Math.round(goal.percentage)}% completado</span>
                       <strong>Ver meta →</strong>
                     </div>
+                    <small className="goal-projection">
+                      {goal.projection
+                        ? goal.projection.completed
+                          ? "Meta completada"
+                          : `Finalización estimada: ${new Intl.DateTimeFormat(
+                              "es-CR",
+                              { month: "short", year: "numeric" },
+                            ).format(goal.projection.date)}`
+                        : "Agregá un aporte periódico para calcular la fecha"}
+                    </small>
                   </Link>
                 ))}
               </div>
@@ -129,7 +165,7 @@ export default async function SavingsPage() {
             <span className="eyebrow">Nueva meta</span>
             <h2>¿Para qué querés ahorrar?</h2>
             <p>Definí tu objetivo. Podrás registrar aportes después de crearla.</p>
-            <GoalForm />
+            <GoalForm defaultFrequency={periodMode} />
           </aside>
         </div>
       </section>

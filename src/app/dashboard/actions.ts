@@ -3,10 +3,33 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { normalizePeriodMode } from "@/lib/periods";
 
 export type MovementState = {
   error?: string;
 };
+
+export async function updatePeriodModeAction(formData: FormData) {
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const periodMode = normalizePeriodMode(formData.get("periodMode"));
+  await supabase
+    .from("profiles")
+    .update({ period_mode: periodMode })
+    .eq("id", userId);
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/movimientos");
+  revalidatePath("/dashboard/ahorros");
+  revalidatePath("/dashboard/reportes");
+  redirect("/dashboard");
+}
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);

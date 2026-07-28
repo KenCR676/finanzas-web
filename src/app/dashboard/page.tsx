@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
+import { updatePeriodModeAction } from "@/app/dashboard/actions";
 import { DashboardOnboarding } from "@/app/dashboard/como-usar/how-to-slides";
+import {
+  currentPeriod,
+  normalizePeriodMode,
+  recentPeriods,
+} from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Resumen mensual" };
@@ -14,23 +20,6 @@ const money = new Intl.NumberFormat("es-CR", {
   maximumFractionDigits: 0,
 });
 
-function monthRange() {
-  const now = new Date();
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const end = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
-  );
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-    analyticsStart: new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1),
-    )
-      .toISOString()
-      .slice(0, 10),
-  };
-}
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
@@ -40,19 +29,21 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { start, end, analyticsStart } = monthRange();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, period_mode")
+    .eq("id", userId)
+    .maybeSingle();
+  const periodMode = normalizePeriodMode(profile?.period_mode);
+  const { start, end, label: periodLabel } = currentPeriod(periodMode);
+  const periods = recentPeriods(periodMode);
+  const analyticsStart = periods[0].start;
   const [
-    { data: profile },
     { data: transactions },
     { data: goals },
     { data: behaviorTransactions },
   ] =
     await Promise.all([
-      supabase
-        .from("profiles")
-        .select("display_name")
-        .eq("id", userId)
-        .maybeSingle(),
       supabase
         .from("transactions")
         .select(
@@ -109,40 +100,30 @@ export default async function DashboardPage() {
     (sum, goal) => sum + goal.saved,
     0,
   );
-  const months = Array.from({ length: 6 }, (_, index) => {
-    const date = new Date();
-    date.setUTCDate(1);
-    date.setUTCMonth(date.getUTCMonth() - (5 - index));
-    const key = date.toISOString().slice(0, 7);
-    return {
-      key,
-      label: new Intl.DateTimeFormat("es-CR", {
-        month: "short",
-        timeZone: "UTC",
-      })
-        .format(date)
-        .replace(".", ""),
-      income: 0,
-      expenses: 0,
-    };
-  });
+  const chartPeriods = periods.map((period) => ({
+    ...period,
+    income: 0,
+    expenses: 0,
+  }));
 
   behaviorTransactions?.forEach((transaction) => {
-    const month = months.find((item) =>
-      transaction.transaction_date.startsWith(item.key),
+    const period = chartPeriods.find(
+      (item) =>
+        transaction.transaction_date >= item.start &&
+        transaction.transaction_date <= item.end,
     );
-    if (month) {
+    if (period) {
       if (transaction.type === "income") {
-        month.income += Number(transaction.amount);
+        period.income += Number(transaction.amount);
       } else {
-        month.expenses += Number(transaction.amount);
+        period.expenses += Number(transaction.amount);
       }
     }
   });
 
   const chartMaximum = Math.max(
     1,
-    ...months.flatMap((month) => [month.income, month.expenses]),
+    ...chartPeriods.flatMap((period) => [period.income, period.expenses]),
   );
   const expenseCategories = Array.from(
     (transactions ?? [])
@@ -182,6 +163,9 @@ export default async function DashboardPage() {
           <span>Finanzas claras</span>
         </a>
         <div className="dashboard-user">
+          <Link className="help-tab" href="/dashboard/reportes">
+            Reportes
+          </Link>
           <Link className="help-tab" href="/dashboard/como-usar">
             Cómo usar
           </Link>
@@ -200,24 +184,47 @@ export default async function DashboardPage() {
       <section className="dashboard-main">
         <header className="dashboard-heading">
           <div>
-            <span className="eyebrow">Resumen mensual</span>
+            <span className="eyebrow">
+              Resumen {periodMode === "monthly" ? "mensual" : "quincenal"}
+            </span>
             <h1>Hola, {displayName}.</h1>
+            <p className="period-caption">{periodLabel}</p>
           </div>
-          <Link className="button button-primary" href="/dashboard/nuevo">
-            + Nuevo movimiento
-          </Link>
+          <div className="dashboard-heading-actions">
+            <form className="period-selector" action={updatePeriodModeAction}>
+              <button
+                className={periodMode === "monthly" ? "active" : ""}
+                name="periodMode"
+                type="submit"
+                value="monthly"
+              >
+                Mensual
+              </button>
+              <button
+                className={periodMode === "fortnightly" ? "active" : ""}
+                name="periodMode"
+                type="submit"
+                value="fortnightly"
+              >
+                Quincenal
+              </button>
+            </form>
+            <Link className="button button-primary" href="/dashboard/nuevo">
+              + Nuevo movimiento
+            </Link>
+          </div>
         </header>
 
         <div className="dashboard-grid">
           <article className="metric-card">
             <span>Ingresos</span>
             <strong>{money.format(income)}</strong>
-            <small>Registrados este mes</small>
+            <small>En el periodo seleccionado</small>
           </article>
           <article className="metric-card">
             <span>Gastos</span>
             <strong>{money.format(expenses)}</strong>
-            <small>Registrados este mes</small>
+            <small>En el periodo seleccionado</small>
           </article>
           <article className="metric-card metric-card-highlight">
             <span>Balance</span>
@@ -236,7 +243,7 @@ export default async function DashboardPage() {
             <div className="card-heading">
               <div>
                 <h2>Movimientos recientes</h2>
-                <span>{transactions?.length ?? 0} este mes</span>
+                <span>{transactions?.length ?? 0} en este periodo</span>
               </div>
               <Link href="/dashboard/movimientos">Ver todos</Link>
             </div>
@@ -373,7 +380,9 @@ export default async function DashboardPage() {
               <span className="eyebrow">Comportamiento</span>
               <h2>Ingresos y gastos</h2>
             </div>
-            <span>Últimos 6 meses</span>
+              <span>
+                Últimas 6 {periodMode === "monthly" ? "mensualidades" : "quincenas"}
+              </span>
           </div>
 
           <div className="analytics-grid">
@@ -383,31 +392,31 @@ export default async function DashboardPage() {
                 <span><i className="expense-dot" /> Gastos</span>
               </div>
               <div className="monthly-chart">
-                {months.map((month) => (
-                  <div className="month-column" key={month.key}>
+                {chartPeriods.map((period) => (
+                  <div className="month-column" key={period.key}>
                     <div className="bar-pair">
                       <i
                         className="income-bar"
                         style={{
                           height: `${Math.max(
-                            month.income ? 4 : 0,
-                            (month.income / chartMaximum) * 100,
+                            period.income ? 4 : 0,
+                            (period.income / chartMaximum) * 100,
                           )}%`,
                         }}
-                        title={`Ingresos: ${money.format(month.income)}`}
+                        title={`Ingresos: ${money.format(period.income)}`}
                       />
                       <i
                         className="expense-bar"
                         style={{
                           height: `${Math.max(
-                            month.expenses ? 4 : 0,
-                            (month.expenses / chartMaximum) * 100,
+                            period.expenses ? 4 : 0,
+                            (period.expenses / chartMaximum) * 100,
                           )}%`,
                         }}
-                        title={`Gastos: ${money.format(month.expenses)}`}
+                        title={`Gastos: ${money.format(period.expenses)}`}
                       />
                     </div>
-                    <strong>{month.label}</strong>
+                    <strong>{period.shortLabel}</strong>
                   </div>
                 ))}
               </div>
