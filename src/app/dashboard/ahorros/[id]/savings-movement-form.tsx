@@ -52,7 +52,7 @@ export function SavingsMovementForm({
           <span className="movement-kind-icon income-kind-icon">+</span>
           <span>
             <strong>Aporte</strong>
-            <small>Sumar al ahorro</small>
+            <small>Sumar al sobre</small>
           </span>
         </label>
         <label className={type === "withdrawal" ? "selected" : ""}>
@@ -66,7 +66,7 @@ export function SavingsMovementForm({
           <span className="movement-kind-icon expense-kind-icon">−</span>
           <span>
             <strong>Retiro</strong>
-            <small>Usar parte del ahorro</small>
+            <small>Usar parte del sobre</small>
           </span>
         </label>
       </fieldset>

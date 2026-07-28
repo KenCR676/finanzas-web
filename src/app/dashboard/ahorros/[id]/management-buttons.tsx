@@ -13,7 +13,7 @@ export function DeleteGoalButton({ goalId }: { goalId: string }) {
       onSubmit={(event) => {
         if (
           !window.confirm(
-            "¿Eliminar esta meta y todo su historial de aportes y retiros? Esta acción no se puede deshacer.",
+            "¿Eliminar este sobre y todo su historial de aportes y retiros? Esta acción no se puede deshacer.",
           )
         ) {
           event.preventDefault();
@@ -22,7 +22,7 @@ export function DeleteGoalButton({ goalId }: { goalId: string }) {
     >
       <input name="goalId" type="hidden" value={goalId} />
       <button className="button button-danger button-small" type="submit">
-        Eliminar meta
+        Eliminar sobre
       </button>
     </form>
   );
@@ -40,7 +40,7 @@ export function DeleteSavingsMovementButton({
       action={deleteSavingsMovementAction}
       className="inline-delete-form"
       onSubmit={(event) => {
-        if (!window.confirm("¿Eliminar este movimiento de ahorro?")) {
+        if (!window.confirm("¿Eliminar este movimiento del sobre?")) {
           event.preventDefault();
         }
       }}

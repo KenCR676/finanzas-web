@@ -41,8 +41,8 @@ export default async function LoginPage({
         <div className="auth-art-content">
           <blockquote>Más claridad. Menos estrés financiero.</blockquote>
           <p>
-            Tus gastos, ingresos y ahorros reunidos en un solo lugar, siempre
-            disponibles.
+            Tus gastos, ingresos y sobres de ahorro reunidos en un solo lugar,
+            siempre disponibles.
           </p>
         </div>
       </aside>

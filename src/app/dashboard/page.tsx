@@ -55,7 +55,7 @@ export default async function DashboardPage() {
       supabase
         .from("savings_goals")
         .select(
-          "id, name, target_amount, color, status, savings_movements(type, amount)",
+          "id, name, color, status, savings_movements(type, amount)",
         )
         .eq("status", "active")
         .limit(3),
@@ -90,10 +90,7 @@ export default async function DashboardPage() {
       return {
         ...goal,
         saved,
-        percentage: Math.min(
-          100,
-          Math.max(0, (saved / Number(goal.target_amount)) * 100),
-        ),
+        movementCount: goal.savings_movements.length,
       };
     }) ?? [];
   const totalSaved = goalsWithBalance.reduce(
@@ -232,9 +229,9 @@ export default async function DashboardPage() {
             <small>Ingresos menos gastos</small>
           </article>
           <article className="metric-card">
-            <span>Ahorro total</span>
+            <span>Total en sobres</span>
             <strong>{money.format(totalSaved)}</strong>
-            <small>{goalsWithBalance.length} metas activas</small>
+            <small>{goalsWithBalance.length} sobres activos</small>
           </article>
         </div>
 
@@ -327,8 +324,8 @@ export default async function DashboardPage() {
           <article className="empty-card">
             <div className="card-heading">
               <div>
-                <h2>Metas de ahorro</h2>
-                <span>{goalsWithBalance.length} activas</span>
+                <h2>Sobres de ahorro</h2>
+                <span>{goalsWithBalance.length} activos</span>
               </div>
               <Link href="/dashboard/ahorros">Ver todas</Link>
             </div>
@@ -343,19 +340,10 @@ export default async function DashboardPage() {
                     <div>
                       <i style={{ backgroundColor: goal.color }} />
                       <span>{goal.name}</span>
-                      <strong>{Math.round(goal.percentage)}%</strong>
-                    </div>
-                    <div className="goal-progress">
-                      <span
-                        style={{
-                          backgroundColor: goal.color,
-                          width: `${goal.percentage}%`,
-                        }}
-                      />
+                      <strong>{money.format(goal.saved)}</strong>
                     </div>
                     <small>
-                      {money.format(goal.saved)} de{" "}
-                      {money.format(Number(goal.target_amount))}
+                      {goal.movementCount} movimientos registrados
                     </small>
                   </Link>
                 ))}
@@ -363,11 +351,11 @@ export default async function DashboardPage() {
             ) : (
               <>
                 <p>
-                  Creá una meta para tu fondo de emergencia, un viaje o
-                  cualquier objetivo importante.
+                  Creá un sobre para separar dinero para emergencias, viajes o
+                  cualquier propósito.
                 </p>
                 <Link className="empty-action" href="/dashboard/ahorros">
-                  Crear mi primera meta →
+                  Crear mi primer sobre →
                 </Link>
               </>
             )}

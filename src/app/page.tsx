@@ -32,7 +32,7 @@ export default async function Home() {
           <span className="eyebrow">Tu dinero, sin complicaciones</span>
           <h1>Entendé hoy lo que pasa con tu dinero.</h1>
           <p>
-            Registrá ingresos, gastos y metas de ahorro. Obtené un resumen
+            Registrá ingresos, gastos y sobres de ahorro. Obtené un resumen
             mensual sencillo para tomar mejores decisiones.
           </p>
           <div className="hero-actions">
@@ -76,13 +76,10 @@ export default async function Home() {
           </div>
           <div className="savings-preview">
             <div>
-              <span>Fondo de emergencia</span>
-              <strong>42%</strong>
+              <span>Sobre: Fondo de emergencia</span>
+              <strong>₡425.000</strong>
             </div>
-            <div className="progress-track">
-              <span style={{ width: "42%" }} />
-            </div>
-            <small>₡425.000 de ₡1.000.000</small>
+            <small>Dinero disponible cuando lo necesités</small>
           </div>
         </div>
       </section>
@@ -100,8 +97,8 @@ export default async function Home() {
         </article>
         <article>
           <span className="feature-number">03</span>
-          <h2>Ahorrá</h2>
-          <p>Creá metas y seguí cada aporte hasta alcanzar tu objetivo.</p>
+          <h2>Separá</h2>
+          <p>Organizá tus ahorros en sobres y controlá cada aporte o retiro.</p>
         </article>
       </section>
     </main>

@@ -66,7 +66,8 @@ create table public.savings_goals (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null check (char_length(trim(name)) between 1 and 100),
-  target_amount numeric(14, 2) not null check (target_amount > 0),
+  description text check (char_length(description) <= 240),
+  target_amount numeric(14, 2) check (target_amount > 0),
   target_date date,
   monthly_target numeric(14, 2) check (monthly_target > 0),
   contribution_frequency text not null default 'monthly'

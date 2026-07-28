@@ -32,7 +32,7 @@ export default async function RegisterPage() {
           <blockquote>Un plan sencillo para cada colón.</blockquote>
           <p>
             Convertí cada registro en una decisión más consciente para vos y
-            tus metas.
+            tus sobres de ahorro.
           </p>
         </div>
       </aside>

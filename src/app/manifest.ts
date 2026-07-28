@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Finanzas claras",
     short_name: "Finanzas",
     description:
-      "Controlá tus ingresos, gastos y metas de ahorro de forma sencilla.",
+      "Controlá tus ingresos, gastos y sobres de ahorro de forma sencilla.",
     start_url: "/",
     scope: "/",
     display: "standalone",

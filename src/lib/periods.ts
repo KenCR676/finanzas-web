@@ -82,33 +82,3 @@ export function recentPeriods(mode: PeriodMode, count = 6) {
 export function normalizePeriodMode(value: unknown): PeriodMode {
   return value === "fortnightly" ? "fortnightly" : "monthly";
 }
-
-export function estimatedSavingsDate({
-  balance,
-  target,
-  contribution,
-  frequency,
-}: {
-  balance: number;
-  target: number;
-  contribution: number | null;
-  frequency: PeriodMode;
-}) {
-  if (balance >= target) {
-    return { periods: 0, date: new Date(), completed: true };
-  }
-
-  if (!contribution || contribution <= 0) {
-    return null;
-  }
-
-  const periods = Math.ceil((target - balance) / contribution);
-  const date = new Date();
-  if (frequency === "fortnightly") {
-    date.setDate(date.getDate() + periods * 15);
-  } else {
-    date.setMonth(date.getMonth() + periods);
-  }
-
-  return { periods, date, completed: false };
-}

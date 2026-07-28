@@ -1168,6 +1168,17 @@ select {
   font-size: 1.2rem;
 }
 
+.goal-card > p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .goal-amounts {
   justify-content: flex-start;
 }
@@ -1228,6 +1239,11 @@ select {
 
 .savings-wide-field {
   grid-column: 1 / -1;
+}
+
+.savings-form textarea {
+  min-height: 6rem;
+  resize: vertical;
 }
 
 .savings-empty {

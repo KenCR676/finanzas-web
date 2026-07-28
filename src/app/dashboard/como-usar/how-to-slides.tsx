@@ -8,7 +8,7 @@ const slides = [
     number: "01",
     title: "Revisá tu resumen",
     description:
-      "Al entrar verás tus ingresos, gastos, balance y ahorro total del mes en una sola pantalla.",
+      "Al entrar verás tus ingresos, gastos, balance y total en sobres en una sola pantalla.",
     action: "El balance se calcula automáticamente.",
     visual: "summary",
   },
@@ -30,10 +30,10 @@ const slides = [
   },
   {
     number: "04",
-    title: "Creá metas de ahorro",
+    title: "Creá sobres de ahorro",
     description:
-      "Definí cuánto querés ahorrar y registrá aportes o retiros para seguir el avance de cada objetivo.",
-    action: "La barra de progreso muestra cuánto falta.",
+      "Separá dinero por propósito y registrá aportes o retiros sin establecer un monto ni una fecha límite.",
+    action: "Cada sobre muestra su saldo y el historial completo.",
     visual: "savings",
   },
   {
@@ -74,7 +74,7 @@ function SlideVisual({ type }: { type: (typeof slides)[number]["visual"] }) {
       ) : null}
       {type === "savings" ? (
         <>
-          <span className="guide-goal-circle">68%</span>
+          <span className="guide-goal-circle">₡</span>
           <div>
             <strong>Fondo de emergencia</strong>
             <i><b /></i>

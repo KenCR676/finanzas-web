@@ -10,17 +10,12 @@ import {
 const initialState: SavingsState = {};
 
 export function GoalForm({
-  defaultFrequency,
   goal,
 }: {
-  defaultFrequency: "monthly" | "fortnightly";
   goal?: {
     id: string;
     name: string;
-    targetAmount: number;
-    monthlyTarget: number | null;
-    targetDate: string | null;
-    contributionFrequency: "monthly" | "fortnightly";
+    description: string;
     color: string;
   };
 }) {
@@ -33,7 +28,7 @@ export function GoalForm({
     <form className="savings-form" action={action}>
       {goal ? <input name="goalId" type="hidden" value={goal.id} /> : null}
       <div className="field savings-wide-field">
-        <label htmlFor="name">Nombre de la meta</label>
+        <label htmlFor="name">Nombre del sobre</label>
         <input
           className="auth-input"
           id="name"
@@ -46,56 +41,16 @@ export function GoalForm({
         />
       </div>
 
-      <div className="field">
-        <label htmlFor="targetAmount">Monto objetivo</label>
-        <input
+      <div className="field savings-wide-field">
+        <label htmlFor="description">Descripción</label>
+        <textarea
           className="auth-input"
-          id="targetAmount"
-          defaultValue={goal?.targetAmount}
-          min="0.01"
-          name="targetAmount"
-          placeholder="₡ 500 000"
-          required
-          step="0.01"
-          type="number"
-        />
-      </div>
-
-      <div className="field">
-        <label htmlFor="monthlyTarget">Aporte periódico</label>
-        <input
-          className="auth-input"
-          id="monthlyTarget"
-          defaultValue={goal?.monthlyTarget ?? ""}
-          min="0.01"
-          name="monthlyTarget"
-          placeholder="Opcional"
-          step="0.01"
-          type="number"
-        />
-      </div>
-
-      <div className="field">
-        <label htmlFor="contributionFrequency">Frecuencia del aporte</label>
-        <select
-          className="auth-input"
-          defaultValue={goal?.contributionFrequency ?? defaultFrequency}
-          id="contributionFrequency"
-          name="contributionFrequency"
-        >
-          <option value="monthly">Mensual</option>
-          <option value="fortnightly">Quincenal</option>
-        </select>
-      </div>
-
-      <div className="field">
-        <label htmlFor="targetDate">Fecha objetivo</label>
-        <input
-          className="auth-input"
-          id="targetDate"
-          defaultValue={goal?.targetDate ?? ""}
-          name="targetDate"
-          type="date"
+          id="description"
+          defaultValue={goal?.description}
+          maxLength={240}
+          name="description"
+          placeholder="Opcional: ¿para qué querés separar este dinero?"
+          rows={3}
         />
       </div>
 
@@ -145,7 +100,7 @@ export function GoalForm({
           disabled={pending}
           type="submit"
         >
-          {pending ? "Creando..." : "Crear meta de ahorro"}
+          {pending ? "Creando..." : "Crear sobre de ahorro"}
         </button>
       )}
     </form>

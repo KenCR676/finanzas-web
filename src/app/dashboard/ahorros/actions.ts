@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { normalizePeriodMode } from "@/lib/periods";
 
 export type SavingsState = {
   error?: string;
@@ -36,34 +35,15 @@ export async function createSavingsGoalAction(
 ): Promise<SavingsState> {
   const { supabase, userId } = await getAuthenticatedUser();
   const name = readString(formData, "name");
-  const targetAmount = readAmount(formData, "targetAmount");
-  const monthlyTargetText = readString(formData, "monthlyTarget");
-  const monthlyTarget = monthlyTargetText
-    ? Number(monthlyTargetText.replace(",", "."))
-    : null;
-  const targetDate = readString(formData, "targetDate");
+  const description = readString(formData, "description");
   const color = readString(formData, "color");
-  const contributionFrequency = normalizePeriodMode(
-    readString(formData, "contributionFrequency"),
-  );
 
   if (name.length < 2 || name.length > 100) {
     return { error: "Ingresá un nombre de entre 2 y 100 caracteres." };
   }
 
-  if (!Number.isFinite(targetAmount) || targetAmount <= 0) {
-    return { error: "Ingresá un monto objetivo mayor que cero." };
-  }
-
-  if (
-    monthlyTarget !== null &&
-    (!Number.isFinite(monthlyTarget) || monthlyTarget <= 0)
-  ) {
-    return { error: "El aporte mensual debe ser mayor que cero." };
-  }
-
-  if (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
-    return { error: "Seleccioná una fecha objetivo válida." };
+  if (description.length > 240) {
+    return { error: "La descripción no puede superar 240 caracteres." };
   }
 
   const allowedColors = ["#176b4d", "#dd713d", "#2563eb", "#7c3aed"];
@@ -72,15 +52,13 @@ export async function createSavingsGoalAction(
   const { error } = await supabase.from("savings_goals").insert({
     user_id: userId,
     name,
-    target_amount: targetAmount,
-    target_date: targetDate || null,
-    monthly_target: monthlyTarget,
-    contribution_frequency: contributionFrequency,
+    description: description || null,
+    target_amount: null,
     color: selectedColor,
   });
 
   if (error) {
-    return { error: "No pudimos crear la meta. Intentá nuevamente." };
+    return { error: "No pudimos crear el sobre. Intentá nuevamente." };
   }
 
   revalidatePath("/dashboard");
@@ -95,34 +73,15 @@ export async function updateSavingsGoalAction(
   const { supabase, userId } = await getAuthenticatedUser();
   const goalId = readString(formData, "goalId");
   const name = readString(formData, "name");
-  const targetAmount = readAmount(formData, "targetAmount");
-  const monthlyTargetText = readString(formData, "monthlyTarget");
-  const monthlyTarget = monthlyTargetText
-    ? Number(monthlyTargetText.replace(",", "."))
-    : null;
-  const targetDate = readString(formData, "targetDate");
+  const description = readString(formData, "description");
   const color = readString(formData, "color");
-  const contributionFrequency = normalizePeriodMode(
-    readString(formData, "contributionFrequency"),
-  );
 
   if (name.length < 2 || name.length > 100) {
     return { error: "Ingresá un nombre de entre 2 y 100 caracteres." };
   }
 
-  if (!Number.isFinite(targetAmount) || targetAmount <= 0) {
-    return { error: "Ingresá un monto objetivo mayor que cero." };
-  }
-
-  if (
-    monthlyTarget !== null &&
-    (!Number.isFinite(monthlyTarget) || monthlyTarget <= 0)
-  ) {
-    return { error: "El aporte periódico debe ser mayor que cero." };
-  }
-
-  if (targetDate && !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
-    return { error: "Seleccioná una fecha objetivo válida." };
+  if (description.length > 240) {
+    return { error: "La descripción no puede superar 240 caracteres." };
   }
 
   const allowedColors = ["#176b4d", "#dd713d", "#2563eb", "#7c3aed"];
@@ -136,17 +95,14 @@ export async function updateSavingsGoalAction(
     .maybeSingle();
 
   if (!goal) {
-    return { error: "No encontramos la meta que querés editar." };
+    return { error: "No encontramos el sobre que querés editar." };
   }
 
   const { error } = await supabase
     .from("savings_goals")
     .update({
       name,
-      target_amount: targetAmount,
-      target_date: targetDate || null,
-      monthly_target: monthlyTarget,
-      contribution_frequency: contributionFrequency,
+      description: description || null,
       color: selectedColor,
       updated_at: new Date().toISOString(),
     })
@@ -154,7 +110,7 @@ export async function updateSavingsGoalAction(
     .eq("user_id", userId);
 
   if (error) {
-    return { error: "No pudimos actualizar la meta. Intentá nuevamente." };
+    return { error: "No pudimos actualizar el sobre. Intentá nuevamente." };
   }
 
   revalidatePath("/dashboard");
@@ -217,7 +173,7 @@ export async function createSavingsMovementAction(
     .maybeSingle();
 
   if (!goal) {
-    return { error: "No encontramos esta meta de ahorro." };
+    return { error: "No encontramos este sobre de ahorro." };
   }
 
   if (type === "withdrawal") {

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s | Finanzas claras",
   },
   description:
-    "Controlá tus ingresos, gastos y metas de ahorro con un resumen mensual sencillo.",
+    "Controlá tus ingresos, gastos y sobres de ahorro con un resumen mensual sencillo.",
   appleWebApp: {
     capable: true,
     title: "Finanzas claras",

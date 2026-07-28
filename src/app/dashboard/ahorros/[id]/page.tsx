@@ -6,13 +6,9 @@ import {
   DeleteSavingsMovementButton,
 } from "@/app/dashboard/ahorros/[id]/management-buttons";
 import { SavingsMovementForm } from "@/app/dashboard/ahorros/[id]/savings-movement-form";
-import {
-  estimatedSavingsDate,
-  normalizePeriodMode,
-} from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Detalle de ahorro" };
+export const metadata: Metadata = { title: "Detalle del sobre" };
 export const dynamic = "force-dynamic";
 
 const money = new Intl.NumberFormat("es-CR", {
@@ -50,9 +46,7 @@ export default async function SavingsGoalPage({
   const [{ data: goal }, { data: movements }] = await Promise.all([
     supabase
       .from("savings_goals")
-      .select(
-        "id, name, target_amount, target_date, monthly_target, contribution_frequency, color",
-      )
+      .select("id, name, description, color")
       .eq("id", id)
       .eq("user_id", userId)
       .maybeSingle(),
@@ -77,18 +71,6 @@ export default async function SavingsGoalPage({
           : -Number(movement.amount)),
       0,
     ) ?? 0;
-  const percentage = Math.min(
-    100,
-    Math.max(0, (balance / Number(goal.target_amount)) * 100),
-  );
-  const frequency = normalizePeriodMode(goal.contribution_frequency);
-  const projection = estimatedSavingsDate({
-    balance,
-    target: Number(goal.target_amount),
-    contribution: goal.monthly_target ? Number(goal.monthly_target) : null,
-    frequency,
-  });
-
   return (
     <main className="movement-shell">
       <nav className="dashboard-nav">
@@ -97,44 +79,30 @@ export default async function SavingsGoalPage({
           <span>Finanzas claras</span>
         </Link>
         <Link className="back-link" href="/dashboard/ahorros">
-          ← Todas las metas
+          ← Todos los sobres
         </Link>
       </nav>
 
       <section className="goal-detail-page">
         <header className="goal-detail-heading">
           <div className="goal-heading-main">
-            <span className="eyebrow">Meta de ahorro</span>
+            <span className="eyebrow">Sobre de ahorro</span>
             <h1>{goal.name}</h1>
-            <p>
-              {goal.target_date
-                ? `Fecha objetivo: ${new Intl.DateTimeFormat("es-CR", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                    timeZone: "UTC",
-                  }).format(new Date(`${goal.target_date}T00:00:00Z`))}`
-                : "Sin fecha límite"}
-            </p>
+            <p>{goal.description || "Sin descripción"}</p>
             <div className="goal-heading-actions">
               <Link
                 className="button button-secondary button-small"
                 href={`/dashboard/ahorros/${goal.id}/editar`}
               >
-                Editar meta
+                Editar sobre
               </Link>
               <DeleteGoalButton goalId={goal.id} />
             </div>
           </div>
           <div className="goal-balance-card">
-            <span>Ahorrado hasta hoy</span>
+            <span>Saldo disponible</span>
             <strong>{money.format(balance)}</strong>
-            <small>
-              Faltan{" "}
-              {money.format(
-                Math.max(0, Number(goal.target_amount) - balance),
-              )}
-            </small>
+            <small>{movements?.length ?? 0} movimientos registrados</small>
           </div>
         </header>
 
@@ -146,50 +114,11 @@ export default async function SavingsGoalPage({
           </p>
         ) : null}
 
-        <div className="goal-progress-card">
-          <div>
-            <span>Progreso</span>
-            <strong>{Math.round(percentage)}%</strong>
-          </div>
-          <div className="goal-progress goal-progress-large">
-            <span
-              style={{ backgroundColor: goal.color, width: `${percentage}%` }}
-            />
-          </div>
-          <small>
-            Objetivo: {money.format(Number(goal.target_amount))}
-            {goal.monthly_target
-              ? ` · Aporte ${frequency === "monthly" ? "mensual" : "quincenal"}: ${money.format(Number(goal.monthly_target))}`
-              : ""}
-          </small>
-        </div>
-
-        <article className="projection-card">
-          <span>Finalización estimada</span>
-          <strong>
-            {projection
-              ? projection.completed
-                ? "Meta completada"
-                : new Intl.DateTimeFormat("es-CR", {
-                    month: "long",
-                    year: "numeric",
-                  }).format(projection.date)
-              : "Sin cálculo todavía"}
-          </strong>
-          <small>
-            {projection
-              ? projection.completed
-                ? "Ya alcanzaste el monto objetivo."
-                : `${projection.periods} aportes ${frequency === "monthly" ? "mensuales" : "quincenales"} pendientes según el plan actual.`
-              : "Definí un aporte periódico para calcular la fecha."}
-          </small>
-        </article>
-
         <div className="goal-detail-layout">
           <article className="movement-card">
             <h2>Registrar movimiento</h2>
             <p className="card-intro">
-              Sumá un aporte o registrá dinero que retiraste de esta meta.
+              Sumá un aporte o registrá dinero que retiraste de este sobre.
             </p>
             <SavingsMovementForm goalId={goal.id} today={todayInCostaRica()} />
           </article>

@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GoalForm } from "@/app/dashboard/ahorros/goal-form";
-import {
-  estimatedSavingsDate,
-  normalizePeriodMode,
-} from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Ahorros" };
+export const metadata: Metadata = { title: "Sobres de ahorro" };
 export const dynamic = "force-dynamic";
 
 const money = new Intl.NumberFormat("es-CR", {
@@ -26,21 +22,13 @@ export default async function SavingsPage() {
     redirect("/login");
   }
 
-  const [{ data: profile }, { data: goals }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("period_mode")
-      .eq("id", userId)
-      .maybeSingle(),
-    supabase
-      .from("savings_goals")
-      .select(
-        "id, name, target_amount, target_date, monthly_target, contribution_frequency, color, status, savings_movements(type, amount)",
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false }),
-  ]);
-  const periodMode = normalizePeriodMode(profile?.period_mode);
+  const { data: goals } = await supabase
+    .from("savings_goals")
+    .select(
+      "id, name, description, color, status, savings_movements(type, amount)",
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   const goalsWithBalance =
     goals?.map((goal) => {
@@ -52,24 +40,10 @@ export default async function SavingsPage() {
             : -Number(movement.amount)),
         0,
       );
-      const percentage = Math.min(
-        100,
-        Math.max(0, (balance / Number(goal.target_amount)) * 100),
-      );
-      const frequency = normalizePeriodMode(goal.contribution_frequency);
       return {
         ...goal,
         balance,
-        percentage,
-        frequency,
-        projection: estimatedSavingsDate({
-          balance,
-          target: Number(goal.target_amount),
-          contribution: goal.monthly_target
-            ? Number(goal.monthly_target)
-            : null,
-          frequency,
-        }),
+        movementCount: goal.savings_movements.length,
       };
     }) ?? [];
   const totalSaved = goalsWithBalance.reduce(
@@ -92,24 +66,24 @@ export default async function SavingsPage() {
       <section className="savings-page">
         <header className="savings-heading">
           <div>
-            <span className="eyebrow">Tus objetivos</span>
-            <h1>Ahorros</h1>
+            <span className="eyebrow">Dinero separado por propósito</span>
+            <h1>Sobres de ahorro</h1>
             <p>
-              Organizá tus metas y registrá cada aporte sin mezclarlo con tus
-              gastos del mes.
+              Separá tus ahorros en sobres y registrá aportes o retiros sin
+              establecer montos ni fechas límite.
             </p>
           </div>
           <div className="savings-total">
-            <span>Total ahorrado</span>
+            <span>Total en sobres</span>
             <strong>{money.format(totalSaved)}</strong>
-            <small>{goalsWithBalance.length} metas creadas</small>
+            <small>{goalsWithBalance.length} sobres creados</small>
           </div>
         </header>
 
         <div className="savings-layout">
           <section>
             <div className="section-title">
-              <h2>Mis metas</h2>
+              <h2>Mis sobres</h2>
               <span>{goalsWithBalance.length} en total</span>
             </div>
 
@@ -122,50 +96,40 @@ export default async function SavingsPage() {
                     key={goal.id}
                   >
                     <div className="goal-card-top">
-                      <i style={{ backgroundColor: goal.color }}>◎</i>
-                      <span>{goal.status === "active" ? "Activa" : "Pausada"}</span>
+                      <i style={{ backgroundColor: goal.color }}>₡</i>
+                      <span>
+                        {goal.status === "active" ? "Disponible" : "Pausado"}
+                      </span>
                     </div>
                     <h3>{goal.name}</h3>
+                    {goal.description ? <p>{goal.description}</p> : null}
                     <div className="goal-amounts">
                       <strong>{money.format(goal.balance)}</strong>
-                      <small>de {money.format(Number(goal.target_amount))}</small>
-                    </div>
-                    <div className="goal-progress">
-                      <span style={{ width: `${goal.percentage}%` }} />
+                      <small>saldo disponible</small>
                     </div>
                     <div className="goal-footer">
-                      <span>{Math.round(goal.percentage)}% completado</span>
-                      <strong>Ver meta →</strong>
+                      <span>{goal.movementCount} movimientos</span>
+                      <strong>Ver sobre →</strong>
                     </div>
-                    <small className="goal-projection">
-                      {goal.projection
-                        ? goal.projection.completed
-                          ? "Meta completada"
-                          : `Finalización estimada: ${new Intl.DateTimeFormat(
-                              "es-CR",
-                              { month: "short", year: "numeric" },
-                            ).format(goal.projection.date)}`
-                        : "Agregá un aporte periódico para calcular la fecha"}
-                    </small>
                   </Link>
                 ))}
               </div>
             ) : (
               <article className="empty-card savings-empty">
-                <h3>Tu primera meta empieza aquí</h3>
+                <h3>Creá tu primer sobre</h3>
                 <p>
-                  Podés comenzar con un fondo de emergencia, un viaje o una
-                  compra importante.
+                  Podés separar dinero para emergencias, vacaciones, compras o
+                  cualquier propósito.
                 </p>
               </article>
             )}
           </section>
 
           <aside className="new-goal-card">
-            <span className="eyebrow">Nueva meta</span>
-            <h2>¿Para qué querés ahorrar?</h2>
-            <p>Definí tu objetivo. Podrás registrar aportes después de crearla.</p>
-            <GoalForm defaultFrequency={periodMode} />
+            <span className="eyebrow">Nuevo sobre</span>
+            <h2>¿Para qué querés separar dinero?</h2>
+            <p>Creá el sobre y después registrá todos los aportes o retiros.</p>
+            <GoalForm />
           </aside>
         </div>
       </section>

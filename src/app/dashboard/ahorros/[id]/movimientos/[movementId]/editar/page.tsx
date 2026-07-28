@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { SavingsMovementForm } from "@/app/dashboard/ahorros/[id]/savings-movement-form";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Editar movimiento de ahorro" };
+export const metadata: Metadata = { title: "Editar movimiento del sobre" };
 export const dynamic = "force-dynamic";
 
 export default async function EditSavingsMovementPage({
@@ -41,7 +41,7 @@ export default async function EditSavingsMovementPage({
           <span>Finanzas claras</span>
         </Link>
         <Link className="back-link" href={`/dashboard/ahorros/${id}`}>
-          ← Volver a la meta
+          ← Volver al sobre
         </Link>
       </nav>
 
