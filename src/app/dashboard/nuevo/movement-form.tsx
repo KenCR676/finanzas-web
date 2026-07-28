@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import {
   createMovementAction,
   type MovementState,
+  updateMovementAction,
 } from "@/app/dashboard/actions";
 
 type Category = {
@@ -18,13 +19,25 @@ const initialState: MovementState = {};
 export function MovementForm({
   categories,
   today,
+  movement,
 }: {
   categories: Category[];
   today: string;
+  movement?: {
+    id: string;
+    type: "income" | "expense";
+    amount: number;
+    categoryId: string;
+    description: string;
+    transactionDate: string;
+    expenseKind: "fixed" | "variable" | null;
+  };
 }) {
-  const [type, setType] = useState<"expense" | "income">("expense");
+  const [type, setType] = useState<"expense" | "income">(
+    movement?.type ?? "expense",
+  );
   const [state, action, pending] = useActionState(
-    createMovementAction,
+    movement ? updateMovementAction : createMovementAction,
     initialState,
   );
   const filteredCategories = categories.filter(
@@ -33,6 +46,9 @@ export function MovementForm({
 
   return (
     <form className="movement-form" action={action}>
+      {movement ? (
+        <input name="movementId" type="hidden" value={movement.id} />
+      ) : null}
       <fieldset className="movement-kind">
         <legend>Tipo de movimiento</legend>
         <label className={type === "expense" ? "selected" : ""}>
@@ -72,6 +88,7 @@ export function MovementForm({
             <span>₡</span>
             <input
               autoFocus
+              defaultValue={movement?.amount}
               id="amount"
               inputMode="decimal"
               min="0.01"
@@ -88,7 +105,7 @@ export function MovementForm({
           <label htmlFor="transactionDate">Fecha</label>
           <input
             className="auth-input"
-            defaultValue={today}
+            defaultValue={movement?.transactionDate ?? today}
             id="transactionDate"
             name="transactionDate"
             required
@@ -104,6 +121,9 @@ export function MovementForm({
             key={type}
             name="categoryId"
             required
+            defaultValue={
+              movement?.type === type ? movement.categoryId : ""
+            }
           >
             <option value="">Seleccioná una categoría</option>
             {filteredCategories.map((category) => (
@@ -119,7 +139,7 @@ export function MovementForm({
             <label htmlFor="expenseKind">Tipo de gasto</label>
             <select
               className="auth-input"
-              defaultValue="variable"
+              defaultValue={movement?.expenseKind ?? "variable"}
               id="expenseKind"
               name="expenseKind"
               required
@@ -137,6 +157,7 @@ export function MovementForm({
             id="description"
             maxLength={240}
             name="description"
+            defaultValue={movement?.description}
             placeholder={
               type === "expense"
                 ? "Ejemplo: Compra del supermercado"
@@ -155,7 +176,10 @@ export function MovementForm({
       ) : null}
 
       <div className="movement-actions">
-        <a className="button button-secondary" href="/dashboard">
+        <a
+          className="button button-secondary"
+          href={movement ? "/dashboard/movimientos" : "/dashboard"}
+        >
           Cancelar
         </a>
         <button
@@ -163,7 +187,11 @@ export function MovementForm({
           disabled={pending}
           type="submit"
         >
-          {pending ? "Guardando..." : "Guardar movimiento"}
+          {pending
+            ? "Guardando..."
+            : movement
+              ? "Guardar cambios"
+              : "Guardar movimiento"}
         </button>
       </div>
     </form>

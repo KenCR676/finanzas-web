@@ -22,6 +22,11 @@ function monthRange() {
   return {
     start: start.toISOString().slice(0, 10),
     end: end.toISOString().slice(0, 10),
+    analyticsStart: new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1),
+    )
+      .toISOString()
+      .slice(0, 10),
   };
 }
 
@@ -34,8 +39,13 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { start, end } = monthRange();
-  const [{ data: profile }, { data: transactions }, { data: goals }] =
+  const { start, end, analyticsStart } = monthRange();
+  const [
+    { data: profile },
+    { data: transactions },
+    { data: goals },
+    { data: behaviorTransactions },
+  ] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -57,6 +67,12 @@ export default async function DashboardPage() {
         )
         .eq("status", "active")
         .limit(3),
+      supabase
+        .from("transactions")
+        .select("type, amount, transaction_date")
+        .gte("transaction_date", analyticsStart)
+        .lte("transaction_date", end)
+        .order("transaction_date"),
     ]);
 
   const income =
@@ -92,6 +108,69 @@ export default async function DashboardPage() {
     (sum, goal) => sum + goal.saved,
     0,
   );
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date();
+    date.setUTCDate(1);
+    date.setUTCMonth(date.getUTCMonth() - (5 - index));
+    const key = date.toISOString().slice(0, 7);
+    return {
+      key,
+      label: new Intl.DateTimeFormat("es-CR", {
+        month: "short",
+        timeZone: "UTC",
+      })
+        .format(date)
+        .replace(".", ""),
+      income: 0,
+      expenses: 0,
+    };
+  });
+
+  behaviorTransactions?.forEach((transaction) => {
+    const month = months.find((item) =>
+      transaction.transaction_date.startsWith(item.key),
+    );
+    if (month) {
+      if (transaction.type === "income") {
+        month.income += Number(transaction.amount);
+      } else {
+        month.expenses += Number(transaction.amount);
+      }
+    }
+  });
+
+  const chartMaximum = Math.max(
+    1,
+    ...months.flatMap((month) => [month.income, month.expenses]),
+  );
+  const expenseCategories = Array.from(
+    (transactions ?? [])
+      .filter((transaction) => transaction.type === "expense")
+      .reduce((summary, transaction) => {
+        const category = Array.isArray(transaction.categories)
+          ? transaction.categories[0]
+          : transaction.categories;
+        const name = category?.name ?? "Sin categoría";
+        const current = summary.get(name) ?? {
+          name,
+          color: category?.color ?? "var(--orange)",
+          total: 0,
+        };
+        current.total += Number(transaction.amount);
+        summary.set(name, current);
+        return summary;
+      }, new Map<string, { name: string; color: string; total: number }>())
+      .values(),
+  ).sort((a, b) => b.total - a.total);
+  const fixedExpenses =
+    transactions
+      ?.filter(
+        (transaction) =>
+          transaction.type === "expense" &&
+          transaction.expense_kind === "fixed",
+      )
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0) ?? 0;
+  const variableExpenses = Math.max(0, expenses - fixedExpenses);
 
   return (
     <main className="dashboard-shell">
@@ -154,7 +233,7 @@ export default async function DashboardPage() {
                 <h2>Movimientos recientes</h2>
                 <span>{transactions?.length ?? 0} este mes</span>
               </div>
-              <Link href="/dashboard/nuevo">Agregar</Link>
+              <Link href="/dashboard/movimientos">Ver todos</Link>
             </div>
             {transactions?.length ? (
               <div className="transaction-list">
@@ -210,6 +289,12 @@ export default async function DashboardPage() {
                         {isIncome ? "+" : "−"}
                         {money.format(Number(transaction.amount))}
                       </strong>
+                      <Link
+                        className="edit-button"
+                        href={`/dashboard/movimientos/${transaction.id}/editar`}
+                      >
+                        Editar
+                      </Link>
                     </div>
                   );
                 })}
@@ -276,6 +361,108 @@ export default async function DashboardPage() {
             )}
           </article>
         </div>
+
+        <section className="analytics-section">
+          <div className="section-title analytics-title">
+            <div>
+              <span className="eyebrow">Comportamiento</span>
+              <h2>Ingresos y gastos</h2>
+            </div>
+            <span>Últimos 6 meses</span>
+          </div>
+
+          <div className="analytics-grid">
+            <article className="analytics-card monthly-chart-card">
+              <div className="chart-legend">
+                <span><i className="income-dot" /> Ingresos</span>
+                <span><i className="expense-dot" /> Gastos</span>
+              </div>
+              <div className="monthly-chart">
+                {months.map((month) => (
+                  <div className="month-column" key={month.key}>
+                    <div className="bar-pair">
+                      <i
+                        className="income-bar"
+                        style={{
+                          height: `${Math.max(
+                            month.income ? 4 : 0,
+                            (month.income / chartMaximum) * 100,
+                          )}%`,
+                        }}
+                        title={`Ingresos: ${money.format(month.income)}`}
+                      />
+                      <i
+                        className="expense-bar"
+                        style={{
+                          height: `${Math.max(
+                            month.expenses ? 4 : 0,
+                            (month.expenses / chartMaximum) * 100,
+                          )}%`,
+                        }}
+                        title={`Gastos: ${money.format(month.expenses)}`}
+                      />
+                    </div>
+                    <strong>{month.label}</strong>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="analytics-card">
+              <h3>Gastos por categoría</h3>
+              {expenseCategories.length ? (
+                <div className="category-chart">
+                  {expenseCategories.slice(0, 5).map((category) => (
+                    <div key={category.name}>
+                      <div>
+                        <span>
+                          <i style={{ backgroundColor: category.color }} />
+                          {category.name}
+                        </span>
+                        <strong>{money.format(category.total)}</strong>
+                      </div>
+                      <div className="category-track">
+                        <span
+                          style={{
+                            backgroundColor: category.color,
+                            width: `${expenses ? (category.total / expenses) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="analytics-empty">
+                  Registrá gastos para ver su distribución.
+                </p>
+              )}
+            </article>
+
+            <article className="analytics-card expense-kind-card">
+              <h3>Fijos vs. variables</h3>
+              <div className="expense-kind-summary">
+                <div>
+                  <span>Gastos fijos</span>
+                  <strong>{money.format(fixedExpenses)}</strong>
+                  <small>
+                    {expenses ? Math.round((fixedExpenses / expenses) * 100) : 0}%
+                  </small>
+                </div>
+                <div>
+                  <span>Gastos variables</span>
+                  <strong>{money.format(variableExpenses)}</strong>
+                  <small>
+                    {expenses
+                      ? Math.round((variableExpenses / expenses) * 100)
+                      : 0}
+                    %
+                  </small>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
       </section>
     </main>
   );

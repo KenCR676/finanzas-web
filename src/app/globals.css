@@ -696,7 +696,7 @@ select {
 
 .transaction-row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 0.8rem;
   border-top: 1px solid var(--line);
@@ -742,6 +742,15 @@ select {
 
 .expense-amount {
   color: #a34725;
+}
+
+.edit-button {
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--green);
+  font-size: 0.72rem;
+  font-weight: 750;
 }
 
 .movement-shell {
@@ -1212,6 +1221,212 @@ select {
   color: var(--muted);
 }
 
+.history-page {
+  width: min(1040px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 5rem;
+}
+
+.history-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.8rem;
+}
+
+.history-heading h1 {
+  margin: 0.6rem 0;
+  font-size: clamp(2.6rem, 6vw, 4.8rem);
+  letter-spacing: -0.065em;
+  line-height: 0.95;
+}
+
+.history-heading p {
+  max-width: 600px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.history-list {
+  display: grid;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.9rem;
+  border-top: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.analytics-section {
+  margin-top: 3rem;
+}
+
+.analytics-title {
+  align-items: flex-end;
+}
+
+.analytics-title h2 {
+  margin: 0.5rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: -0.045em;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 1rem;
+}
+
+.analytics-card {
+  border: 1px solid var(--line);
+  border-radius: 1.15rem;
+  padding: 1.25rem;
+  background: var(--paper);
+}
+
+.analytics-card h3 {
+  margin: 0 0 1rem;
+}
+
+.monthly-chart-card {
+  grid-row: span 2;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.chart-legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chart-legend i,
+.category-chart i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+}
+
+.monthly-chart {
+  display: grid;
+  height: 300px;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: end;
+  gap: clamp(0.5rem, 2vw, 1.2rem);
+  border-bottom: 1px solid var(--line);
+  padding: 1.5rem 0 0.55rem;
+}
+
+.month-column {
+  display: grid;
+  height: 100%;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.bar-pair {
+  display: flex;
+  height: 100%;
+  align-items: end;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.bar-pair i {
+  width: min(38%, 1.7rem);
+  min-height: 0;
+  border-radius: 0.35rem 0.35rem 0 0;
+}
+
+.income-bar {
+  background: var(--green);
+}
+
+.expense-bar {
+  background: var(--orange);
+}
+
+.month-column > strong {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: capitalize;
+}
+
+.category-chart {
+  display: grid;
+  gap: 1rem;
+}
+
+.category-chart > div > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.4rem;
+}
+
+.category-chart span {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+}
+
+.category-chart strong {
+  font-size: 0.75rem;
+}
+
+.category-track {
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7e3da;
+}
+
+.category-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.analytics-empty {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.expense-kind-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.expense-kind-summary > div {
+  display: grid;
+  gap: 0.3rem;
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  background: #f4f0e7;
+}
+
+.expense-kind-summary span,
+.expense-kind-summary small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 @media (max-width: 850px) {
   .hero,
   .auth-shell {
@@ -1239,8 +1454,13 @@ select {
   }
 
   .savings-layout,
-  .goal-detail-layout {
+  .goal-detail-layout,
+  .analytics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .monthly-chart-card {
+    grid-row: auto;
   }
 
   .new-goal-card {
@@ -1292,11 +1512,16 @@ select {
   }
 
   .transaction-row {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .transaction-amount {
     grid-column: 2;
+  }
+
+  .transaction-row .edit-button {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 
   .movement-kind,
@@ -1315,7 +1540,8 @@ select {
   }
 
   .savings-heading,
-  .goal-detail-heading {
+  .goal-detail-heading,
+  .history-heading {
     align-items: stretch;
     flex-direction: column;
   }
@@ -1332,5 +1558,26 @@ select {
 
   .savings-wide-field {
     grid-column: auto;
+  }
+
+  .history-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .history-row .transaction-amount {
+    grid-column: 2;
+  }
+
+  .history-row .edit-button {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
+  .monthly-chart {
+    height: 230px;
+  }
+
+  .expense-kind-summary {
+    grid-template-columns: 1fr;
   }
 }
