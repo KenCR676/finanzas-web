@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/auth/actions";
+import { DashboardOnboarding } from "@/app/dashboard/como-usar/how-to-slides";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Resumen mensual" };
@@ -174,12 +175,16 @@ export default async function DashboardPage() {
 
   return (
     <main className="dashboard-shell">
+      <DashboardOnboarding />
       <nav className="dashboard-nav">
         <a className="brand" href="/dashboard">
           <span className="brand-mark">₡</span>
           <span>Finanzas claras</span>
         </a>
         <div className="dashboard-user">
+          <Link className="help-tab" href="/dashboard/como-usar">
+            Cómo usar
+          </Link>
           <div className="user-copy">
             <strong>{displayName}</strong>
             <span>Sesión segura</span>
