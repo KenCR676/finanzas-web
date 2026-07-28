@@ -52,7 +52,9 @@ export default async function DashboardPage() {
         .order("transaction_date", { ascending: false }),
       supabase
         .from("savings_goals")
-        .select("id, name, target_amount, status")
+        .select(
+          "id, name, target_amount, color, status, savings_movements(type, amount)",
+        )
         .eq("status", "active")
         .limit(3),
     ]);
@@ -67,6 +69,29 @@ export default async function DashboardPage() {
       .reduce((sum, item) => sum + Number(item.amount), 0) ?? 0;
   const balance = income - expenses;
   const displayName = profile?.display_name || "Tu cuenta";
+  const goalsWithBalance =
+    goals?.map((goal) => {
+      const saved = goal.savings_movements.reduce(
+        (sum, movement) =>
+          sum +
+          (movement.type === "deposit"
+            ? Number(movement.amount)
+            : -Number(movement.amount)),
+        0,
+      );
+      return {
+        ...goal,
+        saved,
+        percentage: Math.min(
+          100,
+          Math.max(0, (saved / Number(goal.target_amount)) * 100),
+        ),
+      };
+    }) ?? [];
+  const totalSaved = goalsWithBalance.reduce(
+    (sum, goal) => sum + goal.saved,
+    0,
+  );
 
   return (
     <main className="dashboard-shell">
@@ -116,9 +141,9 @@ export default async function DashboardPage() {
             <small>Ingresos menos gastos</small>
           </article>
           <article className="metric-card">
-            <span>Metas activas</span>
-            <strong>{goals?.length ?? 0}</strong>
-            <small>Objetivos de ahorro</small>
+            <span>Ahorro total</span>
+            <strong>{money.format(totalSaved)}</strong>
+            <small>{goalsWithBalance.length} metas activas</small>
           </article>
         </div>
 
@@ -203,14 +228,39 @@ export default async function DashboardPage() {
           </article>
 
           <article className="empty-card">
-            <h2>Metas de ahorro</h2>
-            {goals?.length ? (
-              <div className="category-list">
-                {goals.map((goal) => (
-                  <div className="category-row" key={goal.id}>
-                    <span>{goal.name}</span>
-                    <strong>{money.format(Number(goal.target_amount))}</strong>
-                  </div>
+            <div className="card-heading">
+              <div>
+                <h2>Metas de ahorro</h2>
+                <span>{goalsWithBalance.length} activas</span>
+              </div>
+              <Link href="/dashboard/ahorros">Ver todas</Link>
+            </div>
+            {goalsWithBalance.length ? (
+              <div className="dashboard-goals">
+                {goalsWithBalance.map((goal) => (
+                  <Link
+                    className="dashboard-goal"
+                    href={`/dashboard/ahorros/${goal.id}`}
+                    key={goal.id}
+                  >
+                    <div>
+                      <i style={{ backgroundColor: goal.color }} />
+                      <span>{goal.name}</span>
+                      <strong>{Math.round(goal.percentage)}%</strong>
+                    </div>
+                    <div className="goal-progress">
+                      <span
+                        style={{
+                          backgroundColor: goal.color,
+                          width: `${goal.percentage}%`,
+                        }}
+                      />
+                    </div>
+                    <small>
+                      {money.format(goal.saved)} de{" "}
+                      {money.format(Number(goal.target_amount))}
+                    </small>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -219,7 +269,9 @@ export default async function DashboardPage() {
                   Creá una meta para tu fondo de emergencia, un viaje o
                   cualquier objetivo importante.
                 </p>
-                <span className="empty-action">Próximamente: primera meta →</span>
+                <Link className="empty-action" href="/dashboard/ahorros">
+                  Crear mi primera meta →
+                </Link>
               </>
             )}
           </article>
