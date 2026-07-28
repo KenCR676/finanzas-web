@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   },
   description:
     "Controlá tus ingresos, gastos y metas de ahorro con un resumen mensual sencillo.",
+  appleWebApp: {
+    capable: true,
+    title: "Finanzas claras",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({

@@ -2,12 +2,12 @@ import { ImageResponse } from "next/og";
 import { AppIconMark } from "./app-icon-mark";
 
 export const size = {
-  width: 512,
-  height: 512,
+  width: 180,
+  height: 180,
 };
 
 export const contentType = "image/png";
 
-export default function Icon() {
+export default function AppleIcon() {
   return new ImageResponse(<AppIconMark dimension={size.width} />, size);
 }
