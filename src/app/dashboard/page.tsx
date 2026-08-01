@@ -8,10 +8,11 @@ import {
   currentPeriod,
   normalizePeriodMode,
   recentPeriods,
+  todayInCostaRica,
 } from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Resumen mensual" };
+export const metadata: Metadata = { title: "Mi billetera" };
 export const dynamic = "force-dynamic";
 
 const money = new Intl.NumberFormat("es-CR", {
@@ -38,8 +39,10 @@ export default async function DashboardPage() {
   const { start, end, label: periodLabel } = currentPeriod(periodMode);
   const periods = recentPeriods(periodMode);
   const analyticsStart = periods[0].start;
+  const today = todayInCostaRica();
   const [
     { data: transactions },
+    { data: walletBalanceData },
     { data: goals },
     { data: behaviorTransactions },
   ] =
@@ -49,19 +52,23 @@ export default async function DashboardPage() {
         .select(
           "id, type, amount, description, transaction_date, expense_kind, categories(name, color)",
         )
+        .eq("user_id", userId)
         .gte("transaction_date", start)
         .lte("transaction_date", end)
         .order("transaction_date", { ascending: false }),
+      supabase.rpc("current_wallet_balance", { balance_date: today }),
       supabase
         .from("savings_goals")
         .select(
           "id, name, color, status, savings_movements(type, amount)",
         )
+        .eq("user_id", userId)
         .eq("status", "active")
         .limit(3),
       supabase
         .from("transactions")
         .select("type, amount, transaction_date")
+        .eq("user_id", userId)
         .gte("transaction_date", analyticsStart)
         .lte("transaction_date", end)
         .order("transaction_date"),
@@ -75,7 +82,8 @@ export default async function DashboardPage() {
     transactions
       ?.filter((item) => item.type === "expense")
       .reduce((sum, item) => sum + Number(item.amount), 0) ?? 0;
-  const balance = income - expenses;
+  const periodBalance = income - expenses;
+  const walletBalance = Number(walletBalanceData ?? 0);
   const displayName = profile?.display_name || "Tu cuenta";
   const goalsWithBalance =
     goals?.map((goal) => {
@@ -224,9 +232,12 @@ export default async function DashboardPage() {
             <small>En el periodo seleccionado</small>
           </article>
           <article className="metric-card metric-card-highlight">
-            <span>Balance</span>
-            <strong>{money.format(balance)}</strong>
-            <small>Ingresos menos gastos</small>
+            <span>Saldo en billetera</span>
+            <strong>{money.format(walletBalance)}</strong>
+            <small>
+              No se reinicia · Este periodo: {periodBalance >= 0 ? "+" : ""}
+              {money.format(periodBalance)}
+            </small>
           </article>
           <article className="metric-card">
             <span>Total en sobres</span>
@@ -311,7 +322,7 @@ export default async function DashboardPage() {
             ) : (
               <>
                 <p>
-                  Todavía no hay movimientos este mes. Registrá tu primer
+                  Todavía no hay movimientos en este periodo. Registrá tu primer
                   ingreso o gasto para comenzar.
                 </p>
                 <Link className="empty-action" href="/dashboard/nuevo">

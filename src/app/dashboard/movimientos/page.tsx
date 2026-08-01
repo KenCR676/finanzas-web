@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { currentPeriod, normalizePeriodMode } from "@/lib/periods";
+import {
+  normalizePeriodMode,
+  recentPeriods,
+  todayInCostaRica,
+} from "@/lib/periods";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Mis movimientos" };
@@ -13,7 +17,12 @@ const money = new Intl.NumberFormat("es-CR", {
   maximumFractionDigits: 0,
 });
 
-export default async function MovementsPage() {
+export default async function MovementsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
+  const { period: requestedPeriod } = await searchParams;
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
@@ -28,18 +37,28 @@ export default async function MovementsPage() {
     .eq("id", userId)
     .maybeSingle();
   const periodMode = normalizePeriodMode(profile?.period_mode);
-  const period = currentPeriod(periodMode);
+  const availablePeriods = recentPeriods(periodMode, 12);
+  const period =
+    availablePeriods.find((item) => item.start === requestedPeriod) ??
+    availablePeriods[availablePeriods.length - 1];
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select(
-      "id, type, amount, description, transaction_date, expense_kind, categories(name, color)",
-    )
-    .eq("user_id", userId)
-    .gte("transaction_date", period.start)
-    .lte("transaction_date", period.end)
-    .order("transaction_date", { ascending: false })
-    .limit(100);
+  const [{ data: transactions }, { data: walletBalanceData }] =
+    await Promise.all([
+      supabase
+        .from("transactions")
+        .select(
+          "id, type, amount, description, transaction_date, expense_kind, categories(name, color)",
+        )
+        .eq("user_id", userId)
+        .gte("transaction_date", period.start)
+        .lte("transaction_date", period.end)
+        .order("transaction_date", { ascending: false })
+        .limit(100),
+      supabase.rpc("current_wallet_balance", {
+        balance_date: todayInCostaRica(),
+      }),
+    ]);
+  const walletBalance = Number(walletBalanceData ?? 0);
 
   return (
     <main className="movement-shell">
@@ -64,10 +83,28 @@ export default async function MovementsPage() {
               necesités.
             </p>
           </div>
-          <Link className="button button-primary" href="/dashboard/nuevo">
-            + Nuevo movimiento
-          </Link>
+          <div className="history-heading-actions">
+            <div className="history-wallet-balance">
+              <span>Saldo actual</span>
+              <strong>{money.format(walletBalance)}</strong>
+            </div>
+            <Link className="button button-primary" href="/dashboard/nuevo">
+              + Nuevo movimiento
+            </Link>
+          </div>
         </header>
+
+        <nav className="history-period-selector" aria-label="Elegir periodo">
+          {[...availablePeriods].reverse().map((item) => (
+            <Link
+              className={item.start === period.start ? "active" : ""}
+              href={`/dashboard/movimientos?period=${item.start}`}
+              key={item.key}
+            >
+              {item.shortLabel}
+            </Link>
+          ))}
+        </nav>
 
         <article className="movement-card">
           <div className="section-title">

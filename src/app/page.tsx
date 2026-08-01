@@ -32,8 +32,8 @@ export default async function Home() {
           <span className="eyebrow">Tu dinero, sin complicaciones</span>
           <h1>Entendé hoy lo que pasa con tu dinero.</h1>
           <p>
-            Registrá ingresos, gastos y sobres de ahorro. Obtené un resumen
-            mensual sencillo para tomar mejores decisiones.
+            Usá tu billetera para registrar ingresos y gastos sin perder el
+            saldo acumulado. Revisá cada mes o quincena cuando lo necesités.
           </p>
           <div className="hero-actions">
             <Link className="button button-primary" href="/registro">

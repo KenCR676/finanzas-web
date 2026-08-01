@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 const slides = [
   {
     number: "01",
-    title: "Revisá tu resumen",
+    title: "Revisá tu billetera",
     description:
-      "Al entrar verás tus ingresos, gastos, balance y total en sobres en una sola pantalla.",
-    action: "El balance se calcula automáticamente.",
+      "El saldo de tu billetera acumula todos tus ingresos y gastos; no vuelve a cero cuando cambia el mes o la quincena.",
+    action: "Los ingresos y gastos del periodo se muestran por separado.",
     visual: "summary",
   },
   {

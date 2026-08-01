@@ -53,6 +53,10 @@ export function currentPeriod(mode: PeriodMode) {
   return rangeForDate(mode, new Date());
 }
 
+export function todayInCostaRica() {
+  return costaRicaDate.format(new Date());
+}
+
 export function recentPeriods(mode: PeriodMode, count = 6) {
   const periods = [];
   let reference = new Date();
